@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A1 Innovations × Joyce Automotive — AI Proposal</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #050810;
+    --surface: #0c1120;
+    --surface2: #111827;
+    --border: rgba(99,179,237,0.12);
+    --accent: #38bdf8;
+    --accent2: #818cf8;
+    --accent3: #34d399;
+    --gold: #fbbf24;
+    --red: #f87171;
+    --purple: #c084fc;
+    --text: #e2e8f0;
+    --muted: #64748b;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  body::before {
+    content:'';
+    position:fixed;
+    inset:0;
+    background-image:
+      linear-gradient(rgba(56,189,248,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(56,189,248,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  /* ── SLIDE ENGINE ── */
+  .deck { position:relative; width:100vw; height:100vh; z-index:1; }
+
+  .slide {
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    justify-content:center; align-items:center;
+    padding:60px 80px;
+    opacity:0;
+    transform:translateX(60px);
+    transition:opacity 0.5s cubic-bezier(0.4,0,0.2,1), transform 0.5s cubic-bezier(0.4,0,0.2,1);
+    pointer-events:none;
+    overflow:hidden;
+  }
+  .slide.active { opacity:1; transform:translateX(0); pointer-events:all; }
+  .slide.exit-left { opacity:0; transform:translateX(-60px); }
+
+  /* ── NAV ── */
+  .nav {
+    position:fixed; bottom:36px; left:50%; transform:translateX(-50%);
+    display:flex; align-items:center; gap:20px; z-index:100;
+    background:rgba(12,17,32,0.9);
+    border:1px solid var(--border);
+    border-radius:100px;
+    padding:10px 24px;
+    backdrop-filter:blur(12px);
+  }
+  .nav-btn {
+    background:none; border:none; color:var(--muted);
+    cursor:pointer; font-size:18px; padding:4px 8px;
+    border-radius:6px;
+    transition:color 0.2s, background 0.2s;
+    font-family:'DM Mono', monospace;
+  }
+  .nav-btn:hover { color:var(--accent); background:rgba(56,189,248,0.08); }
+  .nav-btn:disabled { opacity:0.2; cursor:not-allowed; }
+  .nav-counter { font-family:'DM Mono',monospace; font-size:12px; color:var(--muted); letter-spacing:2px; min-width:60px; text-align:center; }
+  .nav-dots { display:flex; gap:6px; align-items:center; }
+  .nav-dot {
+    width:6px; height:6px; border-radius:50%;
+    background:var(--muted); opacity:0.3;
+    transition:all 0.3s; cursor:pointer;
+  }
+  .nav-dot.active { background:var(--accent); opacity:1; width:20px; border-radius:3px; }
+
+  /* ── TOP BAR ── */
+  .slide-label {
+    position:fixed; top:28px; left:50%; transform:translateX(-50%);
+    font-family:'DM Mono',monospace; font-size:10px;
+    letter-spacing:3px; color:var(--muted); text-transform:uppercase;
+    z-index:100; display:flex; align-items:center; gap:12px;
+  }
+  .slide-label .brand { color:var(--accent); opacity:0.8; }
+  .slide-label .sep { opacity:0.2; }
+
+  .key-hint {
+    position:fixed; top:28px; right:36px;
+    font-family:'DM Mono',monospace; font-size:10px;
+    color:var(--muted); opacity:0.4; letter-spacing:1px; z-index:100;
+  }
+
+  /* ── BADGES ── */
+  .badge {
+    display:inline-block;
+    background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.3);
+    color:var(--accent); font-family:'DM Mono',monospace;
+    font-size:10px; letter-spacing:3px; padding:5px 14px;
+    border-radius:100px; text-transform:uppercase; margin-bottom:20px;
+  }
+  .badge.green { background:rgba(52,211,153,0.1); border-color:rgba(52,211,153,0.3); color:var(--accent3); }
+  .badge.gold { background:rgba(251,191,36,0.1); border-color:rgba(251,191,36,0.3); color:var(--gold); }
+  .badge.purple { background:rgba(192,132,252,0.1); border-color:rgba(192,132,252,0.3); color:var(--purple); }
+  .badge.red { background:rgba(248,113,113,0.1); border-color:rgba(248,113,113,0.3); color:var(--red); }
+
+  /* ── TYPE ── */
+  .display {
+    font-family:'Syne',sans-serif;
+    font-size:clamp(32px,4.5vw,60px);
+    font-weight:800; line-height:1.05;
+    background:linear-gradient(135deg, #e2e8f0 0%, #38bdf8 50%, #818cf8 100%);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    margin-bottom:16px; text-align:center;
+  }
+  .display.green-grad {
+    background:linear-gradient(135deg, #e2e8f0 0%, #34d399 45%, #38bdf8 100%);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  }
+  .heading {
+    font-family:'Syne',sans-serif;
+    font-size:clamp(20px,2.8vw,34px); font-weight:700;
+    color:var(--text); margin-bottom:12px;
+  }
+  .subtext { font-size:15px; color:var(--muted); line-height:1.65; max-width:620px; text-align:center; }
+  .eyebrow {
+    font-family:'DM Mono',monospace; font-size:10px;
+    letter-spacing:4px; text-transform:uppercase; color:var(--accent); margin-bottom:8px;
+  }
+  .eyebrow.green { color:var(--accent3); }
+  .eyebrow.gold { color:var(--gold); }
+  .eyebrow.purple { color:var(--purple); }
+
+  /* ── CARDS ── */
+  .card {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:16px; padding:28px; position:relative; overflow:hidden;
+  }
+  .card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:1px;
+    background:linear-gradient(90deg, transparent, rgba(56,189,248,0.4), transparent);
+  }
+  .card.green::before { background:linear-gradient(90deg, transparent, rgba(52,211,153,0.4), transparent); }
+  .card.gold::before { background:linear-gradient(90deg, transparent, rgba(251,191,36,0.4), transparent); }
+  .card.purple::before { background:linear-gradient(90deg, transparent, rgba(192,132,252,0.4), transparent); }
+  .card.red::before { background:linear-gradient(90deg, transparent, rgba(248,113,113,0.4), transparent); }
+
+  /* ── GRIDS ── */
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; width:100%; max-width:1000px; }
+  .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:18px; width:100%; max-width:1040px; }
+
+  /* ── METRIC CARDS ── */
+  .metric-card {
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius:14px; padding:20px 16px; text-align:center;
+  }
+  .metric-value { font-family:'Syne',sans-serif; font-size:32px; font-weight:800; line-height:1; margin-bottom:6px; }
+  .metric-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1.5px; font-family:'DM Mono',monospace; }
+
+  /* ── STEP LIST ── */
+  .steps { display:flex; flex-direction:column; gap:0; width:100%; max-width:820px; }
+  .step {
+    display:grid; grid-template-columns:52px 1fr;
+    gap:20px; align-items:flex-start;
+    padding:16px 0; border-bottom:1px solid rgba(255,255,255,0.04);
+  }
+  .step:last-child { border-bottom:none; }
+  .step-num { font-family:'DM Mono',monospace; font-size:20px; font-weight:500; line-height:1; margin-top:4px; }
+  .step-body h4 { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; margin-bottom:4px; }
+  .step-body p { font-size:13px; color:var(--muted); line-height:1.55; }
+
+  /* ── PAIN LIST ── */
+  .pain-list { list-style:none; display:flex; flex-direction:column; gap:13px; }
+  .pain-list li { display:flex; align-items:flex-start; gap:12px; font-size:14px; color:var(--text); line-height:1.5; }
+  .pain-icon { width:26px; height:26px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; margin-top:1px; }
+  .pain-icon.red { background:rgba(248,113,113,0.12); }
+  .pain-icon.green { background:rgba(52,211,153,0.12); }
+  .pain-icon.gold { background:rgba(251,191,36,0.12); }
+
+  /* ── PRICE CARD ── */
+  .price-card {
+    background:var(--surface); border:1px solid rgba(52,211,153,0.25);
+    border-radius:20px; padding:32px 36px; position:relative; overflow:hidden;
+  }
+  .price-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:2px;
+    background:linear-gradient(90deg, #34d399, #38bdf8, #818cf8);
+  }
+  .price-rows { display:flex; flex-direction:column; gap:0; margin-top:20px; }
+  .price-row {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:14px;
+  }
+  .price-row:last-child { border-bottom:none; }
+  .price-row .lbl { color:var(--muted); }
+  .price-row .val { font-family:'DM Mono',monospace; font-weight:500; }
+  .val-green { color:var(--accent3); }
+  .val-blue { color:var(--accent); }
+  .val-gold { color:var(--gold); }
+
+  /* ── TOOL PILL ── */
+  .tool-pill {
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius:10px; padding:9px 14px;
+    font-size:12px; font-family:'DM Mono',monospace; color:var(--text);
+  }
+  .tool-pill .dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+
+  /* ── FEATURE ROW ── */
+  .feature-row {
+    display:flex; align-items:flex-start; gap:16px;
+    padding:13px 0; border-bottom:1px solid rgba(255,255,255,0.04);
+  }
+  .feature-row:last-child { border-bottom:none; }
+  .feat-icon {
+    width:36px; height:36px; border-radius:10px;
+    background:rgba(56,189,248,0.08);
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; flex-shrink:0;
+  }
+  .feat-icon.green { background:rgba(52,211,153,0.08); }
+  .feat-text h4 { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; margin-bottom:3px; }
+  .feat-text p { font-size:12px; color:var(--muted); line-height:1.5; }
+
+  /* ── OBJECTION CARD ── */
+  .obj-card {
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius:12px; padding:18px 22px;
+  }
+  .obj-q { font-size:14px; font-weight:600; color:var(--text); margin-bottom:8px; }
+  .obj-a { font-size:13px; color:var(--muted); line-height:1.6; }
+
+  /* ── CTA BOX ── */
+  .cta-box {
+    background:var(--surface); border:1px solid rgba(56,189,248,0.2);
+    border-radius:20px; padding:44px 56px; text-align:center; max-width:680px;
+    position:relative; overflow:hidden;
+  }
+  .cta-box::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:1px;
+    background:linear-gradient(90deg, transparent, rgba(56,189,248,0.6), rgba(129,140,248,0.6), transparent);
+  }
+
+  /* ── ORBS ── */
+  .orb { position:absolute; border-radius:50%; pointer-events:none; filter:blur(80px); opacity:0.1; }
+  .orb-1 { width:500px; height:500px; background:#38bdf8; top:-100px; right:-100px; }
+  .orb-2 { width:400px; height:400px; background:#818cf8; bottom:-80px; left:-80px; }
+  .orb-3 { width:400px; height:400px; background:#34d399; top:-80px; left:-80px; }
+
+  /* ── DIVIDER ── */
+  .divider { width:100%; height:1px; background:linear-gradient(90deg, transparent, rgba(56,189,248,0.2), transparent); margin:16px 0; }
+
+  /* ── IMPACT STAT ── */
+  .impact-stat {
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius:12px; padding:16px 20px; text-align:center;
+  }
+  .impact-num { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; line-height:1; margin-bottom:4px; }
+  .impact-label { font-size:11px; color:var(--muted); font-family:'DM Mono',monospace; letter-spacing:1px; text-transform:uppercase; }
+
+  /* ── IDEA CARD ── */
+  .idea-card {
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius:14px; padding:20px 22px; transition:border-color 0.3s;
+  }
+  .idea-card:hover { border-color:rgba(56,189,248,0.3); }
+  .idea-card h4 { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; margin-bottom:6px; }
+  .idea-card p { font-size:12px; color:var(--muted); line-height:1.55; }
+  .idea-icon { font-size:22px; margin-bottom:10px; }
+
+  /* ── BAR CHART ── */
+  .bar-row { display:flex; align-items:center; gap:14px; margin-bottom:12px; }
+  .bar-label { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); width:160px; text-align:right; flex-shrink:0; }
+  .bar-track { flex:1; height:8px; background:rgba(255,255,255,0.06); border-radius:100px; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:100px; width:0; transition:width 1s ease 0.4s; }
+  .bar-val { font-family:'DM Mono',monospace; font-size:11px; width:44px; flex-shrink:0; }
+
+  /* ── TIMELINE ── */
+  .timeline { position:relative; padding-left:32px; width:100%; max-width:700px; }
+  .timeline::before {
+    content:''; position:absolute; left:8px; top:8px; bottom:8px; width:2px;
+    background:linear-gradient(to bottom, #38bdf8, #818cf8, #34d399, #fbbf24);
+    border-radius:2px;
+  }
+  .tl-item { position:relative; margin-bottom:18px; }
+  .tl-dot { position:absolute; left:-26px; top:14px; width:11px; height:11px; border-radius:50%; border:2px solid var(--accent); background:var(--bg); }
+  .tl-item:nth-child(2) .tl-dot { border-color:var(--accent2); }
+  .tl-item:nth-child(3) .tl-dot { border-color:var(--accent3); }
+  .tl-item:nth-child(4) .tl-dot { border-color:var(--gold); }
+  .tl-card { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:13px 17px; }
+  .tl-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+  .tl-title { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; }
+  .tl-tag { font-family:'DM Mono',monospace; font-size:10px; padding:3px 10px; border-radius:100px; background:rgba(56,189,248,0.1); color:var(--accent); }
+  .tl-desc { font-size:12px; color:var(--muted); line-height:1.5; }
+</style>
+</head>
+<body>
+
+<div class="slide-label">
+  <span class="brand">A1 Innovations</span>
+  <span class="sep">|</span>
+  <span id="slideTitle">Joyce Automotive & Towing</span>
+</div>
+<div class="key-hint">← → or arrow keys</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)" disabled>←</button>
+  <div class="nav-dots" id="navDots"></div>
+  <span class="nav-counter" id="counter">01 / 10</span>
+  <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">→</button>
+</div>
+
+<div class="deck">
+
+<!-- ═══════════════════════ SLIDE 1 — TITLE ═══════════════════════ -->
+<div class="slide active" data-title="Welcome">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="badge">AI Proposal — June 17, 2026</div>
+  <div class="display">Dana, here's what<br>the future looks like.</div>
+  <p class="subtext">A custom AI system built specifically for Joyce Automotive & Towing — so your phones never go unanswered, your quotes take seconds, and your team can focus on what they do best.</p>
+  <div style="margin-top:36px; display:flex; gap:14px; flex-wrap:wrap; justify-content:center;">
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:11px 22px; font-family:'DM Mono',monospace; font-size:12px; color:var(--muted);">🏢 Joyce Automotive & Towing</div>
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:11px 22px; font-family:'DM Mono',monospace; font-size:12px; color:var(--muted);">📍 1034 E Main St, Lakeland, FL</div>
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:11px 22px; font-family:'DM Mono',monospace; font-size:12px; color:var(--muted);">🤖 Presented by A1 Innovations</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 2 — WHO WE ARE ═══════════════════════ -->
+<div class="slide" data-title="About A1 Innovations">
+  <div class="orb orb-1"></div>
+  <div style="width:100%; max-width:980px;">
+    <div class="eyebrow">Who We Are</div>
+    <div class="heading" style="margin-bottom:30px;">A1 Innovations — We build AI systems<br>that run your business on autopilot.</div>
+    <div class="grid-3">
+      <div class="card">
+        <div style="font-size:26px; margin-bottom:12px;">🤖</div>
+        <h4 style="font-family:'Syne',sans-serif; font-weight:700; font-size:14px; margin-bottom:6px;">AI Voice Agents</h4>
+        <p style="font-size:13px; color:var(--muted); line-height:1.5;">24/7 inbound & outbound calling — books, qualifies, answers, and routes calls without a human on the line.</p>
+      </div>
+      <div class="card" style="border-color:rgba(129,140,248,0.2);">
+        <div style="font-size:26px; margin-bottom:12px;">⚡</div>
+        <h4 style="font-family:'Syne',sans-serif; font-weight:700; font-size:14px; margin-bottom:6px;">Workflow Automation</h4>
+        <p style="font-size:13px; color:var(--muted); line-height:1.5;">Eliminate repetitive tasks — quoting, CRM updates, follow-ups, scheduling, and reporting all run automatically.</p>
+      </div>
+      <div class="card green">
+        <div style="font-size:26px; margin-bottom:12px;">📊</div>
+        <h4 style="font-family:'Syne',sans-serif; font-weight:700; font-size:14px; margin-bottom:6px;">Custom AI Systems</h4>
+        <p style="font-size:13px; color:var(--muted); line-height:1.5;">Purpose-built AI tools tailored to your exact business — not off-the-shelf software. Built for how you actually operate.</p>
+      </div>
+    </div>
+    <div style="margin-top:20px; background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:16px 24px; display:flex; align-items:center; gap:20px;">
+      <div style="font-size:22px;">🏆</div>
+      <p style="font-size:13px; color:var(--muted); line-height:1.55;">We work with small-to-mid-size businesses across Florida — identifying the exact bottlenecks slowing them down and replacing manual work with AI systems that run 24/7, never call in sick, and never miss a customer.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 3 — THE PROBLEM ═══════════════════════ -->
+<div class="slide" data-title="The Real Cost of the Status Quo">
+  <div class="orb orb-2"></div>
+  <div style="width:100%; max-width:980px;">
+    <div class="eyebrow gold">The Problem We're Solving</div>
+    <div class="heading" style="margin-bottom:8px;">Right now, Joyce Automotive is losing revenue<br>every single day — and it's not your fault.</div>
+    <p style="font-size:14px; color:var(--muted); margin-bottom:28px;">These are the operational gaps we identified from your current setup.</p>
+    <div class="grid-2" style="align-items:start;">
+      <div class="card red">
+        <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--red); letter-spacing:2px; margin-bottom:16px; text-transform:uppercase;">⚠ What's Costing You Right Now</div>
+        <ul class="pain-list">
+          <li>
+            <div class="pain-icon red">📵</div>
+            <span>Your shop is open <strong>Mon–Fri, 8AM–6PM</strong>. Every call that comes in after 6PM, on weekends, or during busy hours hits voicemail — and most of those customers call your competitor next.</span>
+          </li>
+          <li>
+            <div class="pain-icon red">⏳</div>
+            <span>Quoting takes manual time — someone has to look up parts, check pricing, do the math, and relay it to the customer. That's 10–20+ minutes per quote, multiplied across every job every day.</span>
+          </li>
+          <li>
+            <div class="pain-icon red">📞</div>
+            <span>Your towing line runs 24/7 — but someone has to actually answer it. That's either a tired employee or a missed call. Neither is good for business.</span>
+          </li>
+          <li>
+            <div class="pain-icon red">📋</div>
+            <span>No centralized system to track incoming tow requests, dispatch details, or quote history. Everything lives in people's heads or on paper.</span>
+          </li>
+        </ul>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div style="background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:20px 22px;">
+          <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-bottom:14px;">The Numbers Don't Lie</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="impact-stat">
+              <div class="impact-num" style="color:var(--red);">62%</div>
+              <div class="impact-label">of callers don't leave voicemail</div>
+            </div>
+            <div class="impact-stat">
+              <div class="impact-num" style="color:var(--gold);">85%</div>
+              <div class="impact-label">prefer instant answers over callbacks</div>
+            </div>
+            <div class="impact-stat">
+              <div class="impact-num" style="color:var(--accent);">1,017+</div>
+              <div class="impact-label">reviews — customers love you</div>
+            </div>
+            <div class="impact-stat">
+              <div class="impact-num" style="color:var(--accent3);">0</div>
+              <div class="impact-label">calls missed with AI answering</div>
+            </div>
+          </div>
+        </div>
+        <div class="card gold">
+          <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--gold); letter-spacing:2px; text-transform:uppercase; margin-bottom:10px;">Bottom Line</div>
+          <p style="font-size:14px; color:var(--text); line-height:1.6;">With 1,000+ verified reviews and a reputation built over decades, the only thing standing between Joyce Automotive and <strong style="color:var(--accent3);">significantly more revenue</strong> is plugging the gaps that happen when no one's available to answer the phone or quote a job fast enough.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 4 — CORE SOLUTION ═══════════════════════ -->
+<div class="slide" data-title="The AI System We're Building">
+  <div class="orb orb-3"></div>
+  <div style="width:100%; max-width:1000px;">
+    <div class="eyebrow green">What We're Building For You</div>
+    <div class="heading" style="margin-bottom:28px;">Two AI systems. One goal: Joyce Automotive<br>never misses a dollar of revenue again.</div>
+    <div class="grid-2" style="align-items:start; gap:22px;">
+
+      <!-- VOICE AGENT -->
+      <div class="card" style="border-color:rgba(56,189,248,0.3); padding:26px;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+          <div style="width:44px; height:44px; background:rgba(56,189,248,0.1); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px;">📞</div>
+          <div>
+            <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--accent); letter-spacing:2px; text-transform:uppercase; margin-bottom:2px;">System 01</div>
+            <h3 style="font-family:'Syne',sans-serif; font-size:17px; font-weight:700;">24/7 AI Inbound Voice Agent</h3>
+          </div>
+        </div>
+        <p style="font-size:13px; color:var(--muted); margin-bottom:16px; line-height:1.6;">A fully trained AI agent that answers every single incoming call — day, night, weekends, holidays — in Joyce Automotive's voice. It handles towing dispatch, appointment booking, service questions, and more.</p>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; gap:10px; align-items:flex-start; font-size:13px;"><span style="color:var(--accent3); margin-top:1px;">✓</span><span>Answers calls 24/7 — including after 6PM and all weekend</span></div>
+          <div style="display:flex; gap:10px; align-items:flex-start; font-size:13px;"><span style="color:var(--accent3); margin-top:1px;">✓</span><span>Handles towing dispatch: location, pickup details, ETA</span></div>
+          <div style="display:flex; gap:10px; align-items:flex-start; font-size:13px;"><span style="color:var(--accent3); margin-top:1px;">✓</span><span>Books service appointments and routes urgent calls to staff</span></div>
+          <div style="display:flex; gap:10px; align-items:flex-start; font-size:13px;"><span style="color:var(--accent3); margin-top:1px;">✓</span><span>Answers common questions: hours, services, pricing ranges</span></div>
+          <div style="display:flex; gap:10px; align-items:flex-start; font-size:13px;"><span style="color:var(--accent3); margin-top:1px;">✓</span><span>Collects customer info and logs everything automatically</span></div>
+        </div>
+      </div>
+
+      <!-- QUOTING AGENT -->
+      <div class="card green" style="padding:26px;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+          <div style="width:44px; height:44px; background:rgba(52,211,153,0.1); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px;">💡</div>
+          <div>
+            <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--accent3); letter-spacing:2px; text-transform:uppercase; margin-bottom:2px;">System 02</div>
+            <h3 style="font-family:'Syne',sans-serif; font-size:17px; font-weight:700;">AI Instant Quoting Engine</h3>
+          </div>
+        </div>
+        <p style="font-size:13px; color:var(--muted); margin-bottom:16px; line-height:1.6;">An internal tool your staff uses to generate accurate repair quotes in seconds — and an optional customer-facing version that lives on your website, giving people instant estimates before they even call.</p>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; gap:10px; align-items:flex-start; font-size:13px;"><span style="color:var(--accent3); margin-top:1px;">✓</span><span>Staff enters: vehicle make/model + issue description</span></div>
+          <div style="display:flex; gap:10px; align-items:flex-start; font-size:13px;"><span style="color:var(--accent3); margin-top:1px;">✓</span><span>AI pulls parts pricing + generates accurate quote instantly</span></div>
+          <div style="display:flex; gap:10px; align-items:flex-start; font-size:13px;"><span style="color:var(--accent3); margin-top:1px;">✓</span><span>Cuts quoting time from 10–20 min down to under 60 seconds</span></div>
+          <div style="display:flex; gap:10px; align-items:flex-start; font-size:13px;"><span style="color:var(--accent3); margin-top:1px;">✓</span><span>Website version: customers get instant estimates 24/7</span></div>
+          <div style="display:flex; gap:10px; align-items:flex-start; font-size:13px;"><span style="color:var(--accent3); margin-top:1px;">✓</span><span>Voice agent integration: live quotes delivered on the phone</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:18px; background:rgba(56,189,248,0.04); border:1px solid rgba(56,189,248,0.15); border-radius:12px; padding:16px 24px; display:flex; align-items:center; gap:14px;">
+      <div style="font-size:20px;">🔗</div>
+      <p style="font-size:13px; color:var(--text); line-height:1.5;"><strong style="color:var(--accent);">The Power Move:</strong> When these two systems work together, your voice agent can pull a live quote from the quoting engine and deliver it to the customer on the call — in real time, no staff required. A customer calls at 10PM asking how much a brake job costs on their 2019 Honda Accord — they get an answer. Right then.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 5 — HOW IT WORKS ═══════════════════════ -->
+<div class="slide" data-title="How It Works">
+  <div class="orb orb-1"></div>
+  <div style="width:100%; max-width:900px;">
+    <div class="eyebrow">Real-World Workflow</div>
+    <div class="heading" style="margin-bottom:28px;">What a call looks like with AI answering</div>
+    <div class="grid-2" style="align-items:start; gap:22px;">
+      <div>
+        <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--accent); letter-spacing:2px; text-transform:uppercase; margin-bottom:14px;">📞 Scenario: After-Hours Towing Call</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num" style="color:#38bdf8;">01</div>
+            <div class="step-body">
+              <h4>Customer calls at 11PM</h4>
+              <p>Car broke down on I-4. Currently, this goes to voicemail. With AI — it's answered on the first ring.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num" style="color:#818cf8;">02</div>
+            <div class="step-body">
+              <h4>AI collects the details</h4>
+              <p>Location, vehicle type, what happened — all captured conversationally, naturally. Customer feels heard.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num" style="color:#34d399;">03</div>
+            <div class="step-body">
+              <h4>Dispatch info logged + confirmed</h4>
+              <p>Job details are stored instantly. Staff gets notified. Customer gets a confirmation — no human needed.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num" style="color:#fbbf24;">04</div>
+            <div class="step-body">
+              <h4>Joyce gets the job. Competitor doesn't.</h4>
+              <p>That's revenue that used to walk out the door — now captured automatically, every single time.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--accent3); letter-spacing:2px; text-transform:uppercase; margin-bottom:14px;">💡 Scenario: Repair Quote Request</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num" style="color:#38bdf8;">01</div>
+            <div class="step-body">
+              <h4>Customer asks for a quote</h4>
+              <p>Either on the phone with the AI agent, on your website, or your staff using the internal tool.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num" style="color:#818cf8;">02</div>
+            <div class="step-body">
+              <h4>Make, model, issue entered</h4>
+              <p>Takes 15 seconds. The AI knows the vehicle specs and pulls what parts are needed for that repair.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num" style="color:#34d399;">03</div>
+            <div class="step-body">
+              <h4>Quote generated in under 60 seconds</h4>
+              <p>Parts + labor estimate delivered instantly. No hold music. No "I'll call you back." Just an answer.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num" style="color:#fbbf24;">04</div>
+            <div class="step-body">
+              <h4>Customer books. Job closed.</h4>
+              <p>Fast quotes convert. When you're the first shop to answer with a real number, you win the job.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 6 — SECOND LOCATION ═══════════════════════ -->
+<div class="slide" data-title="Built to Scale With You">
+  <div class="orb orb-2"></div>
+  <div style="width:100%; max-width:960px;">
+    <div class="eyebrow purple">The Bigger Picture</div>
+    <div class="heading" style="margin-bottom:10px;">You mentioned a second location.<br>This system makes that possible.</div>
+    <p style="font-size:14px; color:var(--muted); margin-bottom:28px; max-width:700px;">Opening a second location is one of the hardest operational jumps in any service business. Here's why building this AI infrastructure now is the smartest move you can make before that happens.</p>
+    <div class="grid-3">
+      <div class="idea-card">
+        <div class="idea-icon">🏗️</div>
+        <h4>Build the System Once</h4>
+        <p>The AI infrastructure we build for location one gets duplicated to location two. You don't rebuild from scratch — you clone and customize. Half the cost, twice the speed.</p>
+      </div>
+      <div class="idea-card">
+        <div class="idea-icon">📞</div>
+        <h4>One AI — Multiple Locations</h4>
+        <p>The voice agent can handle calls for both locations simultaneously, route them correctly, and dispatch the right team — no extra headcount required at either location.</p>
+      </div>
+      <div class="idea-card">
+        <div class="idea-icon">📊</div>
+        <h4>Centralized Operations</h4>
+        <p>One dashboard showing calls, quotes, jobs, and performance across both locations. You run two shops with the visibility and control of one — from anywhere.</p>
+      </div>
+      <div class="idea-card">
+        <div class="idea-icon">🔄</div>
+        <h4>Consistent Customer Experience</h4>
+        <p>Every customer at every location gets the same quality of response, same speed of quoting, same professionalism — whether it's Lakeland or wherever location two lands.</p>
+      </div>
+      <div class="idea-card">
+        <div class="idea-icon">👥</div>
+        <h4>Hire for Skill, Not Phones</h4>
+        <p>When AI handles all inbound calls and quoting, your new location's staff can focus 100% on wrenches — not answering phones, writing quotes, or chasing customers.</p>
+      </div>
+      <div class="idea-card" style="border-color:rgba(192,132,252,0.3);">
+        <div class="idea-icon">📈</div>
+        <h4 style="color:var(--purple);">Scale Without the Headache</h4>
+        <p>Most shops that open a second location struggle with operations. Shops with AI infrastructure expand cleanly — because the systems that run location one already know how to run location two.</p>
+      </div>
+    </div>
+    <div style="margin-top:18px; background:rgba(192,132,252,0.05); border:1px solid rgba(192,132,252,0.2); border-radius:12px; padding:15px 22px;">
+      <p style="font-size:13px; color:var(--text); line-height:1.5;">💡 <strong style="color:var(--purple);">The smartest time to build this is before you need it.</strong> Implement now at one location, perfect the system, and when location two opens — you flip a switch, not rebuild an operation.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 7 — BEYOND THE BASICS ═══════════════════════ -->
+<div class="slide" data-title="More AI Opportunities">
+  <div class="orb orb-1"></div>
+  <div style="width:100%; max-width:1000px;">
+    <div class="eyebrow">The Full Picture</div>
+    <div class="heading" style="margin-bottom:10px;">Other ways AI can work inside<br>Joyce Automotive — down the road.</div>
+    <p style="font-size:13px; color:var(--muted); margin-bottom:24px;">We start with the voice agent and quoting engine — those are your highest ROI moves right now. But here's what else is possible once the foundation is in place.</p>
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;">
+      <div class="idea-card">
+        <div class="idea-icon">📲</div>
+        <h4>Automated SMS Follow-Up</h4>
+        <p>After every service visit, the system automatically texts the customer — thanks them, asks for a review, and checks if anything feels off. Turns one visit into a loyal customer.</p>
+      </div>
+      <div class="idea-card">
+        <div class="idea-icon">🔔</div>
+        <h4>Maintenance Reminder Campaigns</h4>
+        <p>AI tracks service history and automatically reminds customers when their oil change, tire rotation, or inspection is due — keeping your bays full without any staff effort.</p>
+      </div>
+      <div class="idea-card">
+        <div class="idea-icon">🌐</div>
+        <h4>Website AI Chat Agent</h4>
+        <p>A chat widget on joyceautomotive.com that answers questions, provides quotes, books appointments, and captures lead info — 24/7, while your website is already live.</p>
+      </div>
+      <div class="idea-card">
+        <div class="idea-icon">📦</div>
+        <h4>Parts Inventory Tracker</h4>
+        <p>AI monitors parts usage, flags when stock is low, and can auto-generate purchase orders for your supplier — so your team never has to stop a job because a part wasn't ordered.</p>
+      </div>
+      <div class="idea-card">
+        <div class="idea-icon">⭐</div>
+        <h4>Review Generation System</h4>
+        <p>You already have 1,017+ reviews — imagine automating the ask. AI sends personalized review requests after every completed job, tripling your review volume without lifting a finger.</p>
+      </div>
+      <div class="idea-card" style="border-color:rgba(251,191,36,0.3);">
+        <div class="idea-icon">📋</div>
+        <h4 style="color:var(--gold);">Digital Vehicle Inspection Reports</h4>
+        <p>Your site already mentions digital inspections — AI can automate the delivery, format, and follow-up for every inspection report sent to customers via text or email.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 8 — TECH STACK ═══════════════════════ -->
+<div class="slide" data-title="What Powers This">
+  <div class="orb orb-2"></div>
+  <div style="width:100%; max-width:900px;">
+    <div class="eyebrow">Under the Hood</div>
+    <div class="heading" style="margin-bottom:28px;">The tech stack behind your AI system</div>
+    <div class="grid-2" style="align-items:start; gap:22px;">
+      <div>
+        <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--accent); letter-spacing:2px; text-transform:uppercase; margin-bottom:14px;">Build Components</div>
+        <div style="display:flex; flex-direction:column; gap:0;">
+          <div class="feature-row">
+            <div class="feat-icon">🎙️</div>
+            <div class="feat-text">
+              <h4>VAPI — AI Voice Infrastructure</h4>
+              <p>Powers the 24/7 phone agent. Handles real-time voice conversations, natural language, and call routing.</p>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-icon">⚙️</div>
+            <div class="feat-text">
+              <h4>n8n / Make — Workflow Automation</h4>
+              <p>Connects the quoting engine, call logs, dispatch alerts, and any existing tools Joyce already uses.</p>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-icon">🧠</div>
+            <div class="feat-text">
+              <h4>Claude AI — The Brain</h4>
+              <p>Handles natural language understanding, quoting logic, and conversational responses. The most accurate AI available today.</p>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-icon">📊</div>
+            <div class="feat-text">
+              <h4>Custom Dashboard</h4>
+              <p>A simple internal view showing all calls, quotes, dispatch logs, and performance metrics — no tech experience needed.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--accent3); letter-spacing:2px; text-transform:uppercase; margin-bottom:0;">What This Plugs Into</div>
+        <div style="display:flex; flex-wrap:wrap; gap:10px;">
+          <span class="tool-pill"><span class="dot" style="background:#38bdf8;"></span>Your Phone Number</span>
+          <span class="tool-pill"><span class="dot" style="background:#818cf8;"></span>Your Website</span>
+          <span class="tool-pill"><span class="dot" style="background:#34d399;"></span>Parts Supplier Data</span>
+          <span class="tool-pill"><span class="dot" style="background:#fbbf24;"></span>SMS / Texting</span>
+          <span class="tool-pill"><span class="dot" style="background:#f87171;"></span>Email Notifications</span>
+          <span class="tool-pill"><span class="dot" style="background:#c084fc;"></span>Dispatch Alerts</span>
+        </div>
+        <div class="card" style="margin-top:6px; padding:20px;">
+          <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-bottom:12px;">Timeline to Go Live</div>
+          <div class="timeline">
+            <div class="tl-item">
+              <div class="tl-dot"></div>
+              <div class="tl-card">
+                <div class="tl-head"><span class="tl-title">Kickoff & Setup</span><span class="tl-tag">Week 1</span></div>
+                <p class="tl-desc">Access, integrations confirmed, system architecture finalized.</p>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-dot"></div>
+              <div class="tl-card">
+                <div class="tl-head"><span class="tl-title">Voice Agent Build</span><span class="tl-tag" style="background:rgba(129,140,248,0.1);color:var(--accent2);">Week 2–3</span></div>
+                <p class="tl-desc">AI trained on Joyce's services, voice, tone, and towing workflow.</p>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-dot"></div>
+              <div class="tl-card">
+                <div class="tl-head"><span class="tl-title">Quoting Engine Build</span><span class="tl-tag" style="background:rgba(52,211,153,0.1);color:var(--accent3);">Week 3–4</span></div>
+                <p class="tl-desc">Internal tool + optional website integration built and tested.</p>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-dot"></div>
+              <div class="tl-card">
+                <div class="tl-head"><span class="tl-title">Go Live 🚀</span><span class="tl-tag" style="background:rgba(251,191,36,0.1);color:var(--gold);">Week 4–5</span></div>
+                <p class="tl-desc">Live testing, team walkthrough, full launch. 30-day support included.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 9 — INVESTMENT ═══════════════════════ -->
+<div class="slide" data-title="Investment">
+  <div class="orb orb-3"></div>
+  <div style="width:100%; max-width:980px; display:flex; gap:24px; align-items:flex-start;">
+    <div class="price-card" style="flex:1.1;">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--accent3); letter-spacing:3px; text-transform:uppercase; margin-bottom:18px;">Estimated Investment Range</div>
+      <div style="font-family:'Syne',sans-serif; font-weight:800; font-size:clamp(30px,3.8vw,50px); line-height:1; background:linear-gradient(135deg,#34d399,#38bdf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">$5,000 one-time</div>
+      <div style="font-family:'Syne',sans-serif; font-weight:700; font-size:clamp(18px,2vw,26px); color:var(--accent); margin-top:6px;">+ $750 / month</div>
+      <div style="font-size:12px; color:var(--muted); margin-top:8px; margin-bottom:4px;">Based on voice agent + quoting engine — final scope may vary</div>
+      <div class="price-rows">
+        <div class="price-row">
+          <span class="lbl">AI Quoting Engine (Internal + Web)</span>
+          <span class="val val-green">~$3,000 <span style="font-size:10px; color:var(--muted);">(60%)</span></span>
+        </div>
+        <div class="price-row">
+          <span class="lbl">24/7 AI Inbound Voice Agent</span>
+          <span class="val val-green">~$1,000 <span style="font-size:10px; color:var(--muted);">(20%)</span></span>
+        </div>
+        <div class="price-row">
+          <span class="lbl">System Integration & Dashboard</span>
+          <span class="val val-green">~$1,000 <span style="font-size:10px; color:var(--muted);">(20%)</span></span>
+        </div>
+        <div class="price-row">
+          <span class="lbl">Monthly Support, Maintenance & Continued Build</span>
+          <span class="val val-blue">$750/mo</span>
+        </div>
+        <div class="price-row" style="border-top:1px solid rgba(52,211,153,0.2); margin-top:4px; padding-top:14px;">
+          <span style="font-family:'Syne',sans-serif; font-weight:700; font-size:14px;">One-Time Total (Estimated)</span>
+          <span class="val" style="font-size:15px; color:var(--accent3);">$5,000</span>
+        </div>
+      </div>
+      <div style="margin-top:16px; padding:13px 16px; background:rgba(52,211,153,0.05); border-radius:10px; border:1px solid rgba(52,211,153,0.15);">
+        <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--accent3); margin-bottom:5px; letter-spacing:2px; text-transform:uppercase;">Payment Terms</div>
+        <p style="font-size:13px; color:var(--muted);">50% upfront ($2,500) to begin the build. 50% ($2,500) at go-live. $750/month recurring support begins after launch.</p>
+      </div>
+      <div style="margin-top:12px; padding:12px 16px; background:rgba(251,191,36,0.04); border-radius:10px; border:1px solid rgba(251,191,36,0.15);">
+        <p style="font-size:12px; color:var(--muted);">⚠ This is a rough estimate based on the voice agent and quoting agent only. Final pricing confirmed after full scoping — additional features may adjust the total.</p>
+      </div>
+    </div>
+    <div style="flex:1; display:flex; flex-direction:column; gap:14px;">
+      <div class="eyebrow green" style="margin-bottom:0;">ROI Breakdown</div>
+      <div class="heading" style="font-size:20px; margin-bottom:4px;">What $5,000 gives back</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div class="metric-card">
+          <div class="metric-value" style="color:var(--accent); font-size:26px;">100%</div>
+          <div class="metric-label">Calls answered — 24/7, no exceptions</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value" style="color:var(--accent3); font-size:26px;">&lt;60s</div>
+          <div class="metric-label">Quote delivered — every time</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value" style="color:var(--gold); font-size:26px;">10–15hrs</div>
+          <div class="metric-label">Staff time saved per week</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value" style="color:var(--purple); font-size:26px;">&lt;60 days</div>
+          <div class="metric-label">Estimated payback period</div>
+        </div>
+      </div>
+      <div style="background:var(--surface2); border:1px solid rgba(52,211,153,0.15); border-radius:12px; padding:16px 18px;">
+        <p style="font-size:13px; color:var(--muted); line-height:1.65;">If AI captures just <strong style="color:var(--accent3);">2 extra tow jobs per week</strong> that currently go to voicemail — at $150–$300 per tow — that's <strong style="color:var(--accent3);">$1,200–$2,400/month in pure recovered revenue.</strong> The $5,000 build pays for itself inside 60 days. Every dollar after that is money Joyce was already earning — just losing.</p>
+      </div>
+      <div style="background:rgba(56,189,248,0.04); border:1px solid rgba(56,189,248,0.15); border-radius:12px; padding:14px 18px;">
+        <p style="font-size:13px; color:var(--muted); line-height:1.6;">And that's <strong style="color:var(--accent);">before</strong> counting faster quotes converting more repair jobs, staff hours freed up, and the foundation being ready when location two opens.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 10 — CLOSE ═══════════════════════ -->
+<div class="slide" data-title="The Future Is Now">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3" style="opacity:0.07; top:auto; bottom:-100px; right:-100px; left:auto;"></div>
+  <div style="max-width:760px; text-align:center; display:flex; flex-direction:column; align-items:center;">
+    <div class="badge" style="background:rgba(192,132,252,0.1); border-color:rgba(192,132,252,0.4); color:var(--purple); letter-spacing:4px;">The Future Is Now</div>
+    <div style="font-family:'Syne',sans-serif; font-size:clamp(28px,4vw,54px); font-weight:800; line-height:1.05; margin-bottom:20px; background:linear-gradient(135deg, #e2e8f0 0%, #c084fc 35%, #38bdf8 65%, #34d399 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">
+      Is Joyce Automotive ready<br>to be a pioneer?
+    </div>
+    <p style="font-size:16px; color:var(--text); line-height:1.75; margin-bottom:10px; max-width:640px;">Most shops your competitors included are still doing things the exact same way they did 20 years ago. Answering phones manually. Writing quotes by hand. Losing calls after hours. <strong style="color:var(--purple);">That's their ceiling.</strong></p>
+    <p style="font-size:16px; color:var(--text); line-height:1.75; margin-bottom:28px; max-width:640px;">The businesses that implement AI <em>right now</em> — before everyone else catches on — are the ones that dominate their market for the next decade. When Joyce Automotive opens that second location, <strong style="color:var(--accent3);">you won't be scaling a problem. You'll be duplicating a machine.</strong></p>
+
+    <div style="display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin-bottom:28px;">
+      <div style="background:rgba(192,132,252,0.08); border:1px solid rgba(192,132,252,0.25); border-radius:12px; padding:14px 20px; font-size:13px; color:var(--purple); font-family:'DM Mono',monospace; letter-spacing:1px;">🏆 Pioneer Advantage</div>
+      <div style="background:rgba(52,211,153,0.08); border:1px solid rgba(52,211,153,0.25); border-radius:12px; padding:14px 20px; font-size:13px; color:var(--accent3); font-family:'DM Mono',monospace; letter-spacing:1px;">🚀 Scale-Ready Infrastructure</div>
+      <div style="background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.25); border-radius:12px; padding:14px 20px; font-size:13px; color:var(--accent); font-family:'DM Mono',monospace; letter-spacing:1px;">⚡ Built for Location 2</div>
+    </div>
+
+    <div style="width:100%; background:var(--surface); border:1px solid rgba(192,132,252,0.2); border-radius:16px; padding:22px 28px; position:relative; overflow:hidden; margin-bottom:20px;">
+      <div style="position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg, #c084fc, #38bdf8, #34d399);"></div>
+      <div style="display:flex; flex-direction:column; gap:10px; text-align:left;">
+        <div class="feature-row" style="padding:10px 0;">
+          <div class="feat-icon" style="background:rgba(192,132,252,0.1);">✍️</div>
+          <div class="feat-text">
+            <h4>Step 1 — Lock In the Scope</h4>
+            <p>30 minutes. We confirm exactly what gets built and finalize pricing. No guesswork.</p>
+          </div>
+        </div>
+        <div class="feature-row" style="padding:10px 0;">
+          <div class="feat-icon" style="background:rgba(56,189,248,0.1);">💳</div>
+          <div class="feat-text">
+            <h4>Step 2 — $2,500 Deposit. Build Begins.</h4>
+            <p>Simple invoice. We start within the week. No waiting, no bureaucracy.</p>
+          </div>
+        </div>
+        <div class="feature-row" style="padding:10px 0; border-bottom:none;">
+          <div class="feat-icon" style="background:rgba(52,211,153,0.1);">🚀</div>
+          <div class="feat-text">
+            <h4>Step 3 — Go Live. Stay Ahead.</h4>
+            <p>In 4–5 weeks, Joyce Automotive is operating at a level your competitors won't reach for years.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:6px; align-items:center;">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:2px; text-transform:uppercase;">Reach Mason @ A1 Innovations</div>
+      <div style="display:flex; gap:24px; flex-wrap:wrap; justify-content:center;">
+        <div style="font-size:14px; color:var(--accent);">📧 masona1harold@gmail.com</div>
+        <div style="font-size:14px; color:var(--accent3);">📞 (863) 370-0505</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /deck -->
+
+<script>
+  let current = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  const counter = document.getElementById('counter');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const slideTitle = document.getElementById('slideTitle');
+  const dotsContainer = document.getElementById('navDots');
+
+  slides.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+    dot.onclick = () => goTo(i);
+    dotsContainer.appendChild(dot);
+  });
+
+  function pad(n) { return n < 10 ? '0' + n : n; }
+
+  function goTo(index) {
+    if (index < 0 || index >= total) return;
+    const prev = slides[current];
+    prev.classList.remove('active');
+    prev.classList.add('exit-left');
+    setTimeout(() => prev.classList.remove('exit-left'), 500);
+    current = index;
+    slides[current].classList.add('active');
+    counter.textContent = pad(current + 1) + ' / ' + pad(total);
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === total - 1;
+    slideTitle.textContent = slides[current].dataset.title || 'Joyce Automotive';
+    document.querySelectorAll('.nav-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === current);
+    });
+
+    // Trigger bar animations on slide 8
+    if (current === 7) {
+      setTimeout(() => {
+        document.querySelectorAll('.bar-fill').forEach(bar => {
+          bar.style.width = bar.dataset.width || '0%';
+        });
+      }, 400);
+    }
+  }
+
+  function changeSlide(dir) { goTo(current + dir); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') changeSlide(-1);
+  });
+</script>
+</body>
+</html>
